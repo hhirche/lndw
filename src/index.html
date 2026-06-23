@@ -28,7 +28,17 @@
           </div>
         </div>
         <div class="header-search">
-          <input type="search" id="search-input" placeholder="Suche nach Veranstaltungen…" autocomplete="off" aria-label="Suche">
+          <!-- Mobile toggle button (hidden on desktop) -->
+          <button class="search-toggle" id="search-toggle" aria-label="Suche öffnen">
+            <span class="search-toggle-icon">🔍</span>
+            <span class="search-toggle-dot"></span>
+          </button>
+          <!-- Search field wrapper -->
+          <div class="search-field" id="search-field">
+            <button class="search-back" id="search-back" aria-label="Suche schließen">←</button>
+            <input type="search" id="search-input" placeholder="Suche nach Veranstaltungen…" autocomplete="off" aria-label="Suche">
+            <button class="search-clear" id="search-clear" aria-label="Suchtext löschen" hidden>✕</button>
+          </div>
         </div>
         <button class="filters-toggle" id="filters-toggle" aria-label="Filter ein-/ausblenden" aria-expanded="false">
           <span class="filters-toggle-icon">⚙</span>
