@@ -31,6 +31,10 @@ export function initCards(events, venues, onFlyToVenue) {
   content = document.getElementById('drawer-content');
 
   document.getElementById('drawer-close').addEventListener('click', closeDrawer);
+  const backMobile = document.getElementById('drawer-back-mobile');
+  const closeBottom = document.getElementById('drawer-close-bottom');
+  if (backMobile) backMobile.addEventListener('click', closeDrawer);
+  if (closeBottom) closeBottom.addEventListener('click', closeDrawer);
   overlay.addEventListener('click', closeDrawer);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer();
@@ -112,8 +116,12 @@ export function showEvent(eventId) {
   overlay.classList.add('visible');
   overlay.setAttribute('aria-hidden', 'false');
   content.scrollTop = 0;
-  // Focus close button for a11y
-  setTimeout(() => document.getElementById('drawer-close').focus(), 100);
+  // Focus the appropriate close control for a11y
+  const focusId = window.matchMedia('(max-width: 768px)').matches
+    ? 'drawer-back-mobile'
+    : 'drawer-close';
+  const focusEl = document.getElementById(focusId);
+  if (focusEl) setTimeout(() => focusEl.focus(), 100);
 }
 
 export function closeDrawer() {
