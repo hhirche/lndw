@@ -707,6 +707,11 @@ html, body {
 @media (max-width: 768px) {
   .brand-text h1 { font-size: 14px; }
   .brand-sub { display: none; }
+  .brand-icon { display: none; }
+  /* Safety net: truncate title on very narrow screens after icon is dropped */
+  .brand { min-width: 0; }
+  .brand-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .brand-text h1 { overflow: hidden; text-overflow: ellipsis; }
 
   /* --- Expandable search (mobile) --- */
   .header-search {
