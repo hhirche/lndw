@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="description" content="Interaktive Karte der Dresdner Langen Nacht der Wissenschaften — entdecke Veranstaltungen rund um Dresden.">
+  <title>LNdW Dresden — Programm-Karte</title>
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔬</text></svg>">
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand">
+          <span class="brand-icon" aria-hidden="true">🔬</span>
+          <div class="brand-text">
+            <h1>Lange Nacht der Wissenschaften 2026</h1>
+            <p class="brand-sub">Dresden · Interaktive Programmkarte</p>
+          </div>
+        </div>
+        <div class="header-search">
+          <input type="search" id="search-input" placeholder="Suche nach Veranstaltungen…" autocomplete="off" aria-label="Suche">
+        </div>
+        <button class="filters-toggle" id="filters-toggle" aria-label="Filter ein-/ausblenden" aria-expanded="true">
+          <span class="filters-toggle-icon">⚙</span>
+          <span class="filters-toggle-label">Filter</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <aside class="filters-panel" id="filters-panel" aria-label="Filter">
+        <div class="filters-header">
+          <h2>Filter</h2>
+          <button class="btn-link" id="reset-filters">Zurücksetzen</button>
+        </div>
+        <div class="filters-body">
+          <div class="filter-group">
+            <label for="filter-time-from">Uhrzeit ab</label>
+            <select id="filter-time-from" class="filter-select"></select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-time-to">Uhrzeit bis</label>
+            <select id="filter-time-to" class="filter-select"></select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-organizer">Veranstalter</label>
+            <select id="filter-organizer" class="filter-select"></select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-venue">Veranstaltungsort</label>
+            <select id="filter-venue" class="filter-select"></select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-district">Stadtteil</label>
+            <select id="filter-district" class="filter-select"></select>
+          </div>
+          <div class="filter-group">
+            <label for="filter-format">Format</label>
+            <select id="filter-format" class="filter-select"></select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Interessen</span>
+            <div class="chips" id="filter-interests" role="group" aria-label="Interessen"></div>
+          </div>
+        </div>
+        <div class="filters-footer">
+          <span id="result-count" class="result-count">Lade Daten…</span>
+        </div>
+      </aside>
+
+      <div class="map-wrap">
+        <div id="map" role="application" aria-label="Karte der Veranstaltungsorte"></div>
+        <div class="map-loading" id="map-loading">
+          <div class="spinner"></div>
+          <p>Lade Programm…</p>
+        </div>
+      </div>
+    </main>
+
+    <section class="event-drawer" id="event-drawer" aria-hidden="true" aria-label="Veranstaltungsdetails">
+      <button class="drawer-close" id="drawer-close" aria-label="Schließen">✕</button>
+      <div class="drawer-content" id="drawer-content"></div>
+    </section>
+
+    <div class="drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
+
+    <!-- Venue popup overlay (screen-centered, zoom animation from marker) -->
+    <div class="popup-overlay" id="popup-overlay" aria-hidden="true">
+      <div class="popup-backdrop" id="popup-backdrop"></div>
+      <div class="popup-panel" id="popup-panel" role="dialog" aria-modal="true" aria-label="Veranstaltungsort Details">
+        <div class="popup-header">
+          <button class="popup-close" id="popup-close" aria-label="Schließen">✕</button>
+        </div>
+        <div class="popup-body" id="popup-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>

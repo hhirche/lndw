@@ -1,0 +1,14 @@
+{
+  "name": "lndw-scraper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Scraper for Dresdner Lange Nacht der Wissenschaften program data",
+  "scripts": {
+    "geocode": "node geocode.mjs",
+    "build": "node build.mjs",
+    "merge": "node merge.mjs",
+    "all": "node merge.mjs && node geocode.mjs && node build.mjs"
+  },
+  "dependencies": {}
+}
