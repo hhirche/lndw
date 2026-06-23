@@ -52,8 +52,6 @@ function buildPopupContent(venue) {
 
   return `
     <div class="popup-venue">
-      <div class="popup-venue-name">${escapeHtml(venue.name)}</div>
-      ${venue.address?.district ? `<div class="popup-venue-district">${escapeHtml(venue.address.district)}</div>` : ''}
       <div class="popup-event-list">${items || '<div class="popup-event-title">Keine Veranstaltungen</div>'}</div>
     </div>
   `;
@@ -261,6 +259,17 @@ export function openVenuePopup(venueId) {
   }
   const venueForPopup = { ...venue, eventIds };
 
+  // Set header
+  const headerName = popupPanel.querySelector('.popup-header-name');
+  const headerDistrict = popupPanel.querySelector('.popup-header-district');
+  const headerSep = popupPanel.querySelector('.popup-header-sep');
+  if (headerName) headerName.textContent = venue.name || '';
+  if (headerDistrict) {
+    headerDistrict.textContent = venue.address?.district || '';
+    headerDistrict.style.display = venue.address?.district ? '' : 'none';
+  }
+  if (headerSep) headerSep.style.display = venue.address?.district ? '' : 'none';
+
   // Set content
   popupContent.innerHTML = buildPopupContent(venueForPopup);
 
@@ -295,6 +304,11 @@ export function openVenuePopup(venueId) {
 
 export function closeVenuePopup() {
   if (!popupOverlay) return;
+  const headerName = popupPanel.querySelector('.popup-header-name');
+  const headerDistrict = popupPanel.querySelector('.popup-header-district');
+  if (headerName) headerName.textContent = '';
+  if (headerDistrict) headerDistrict.textContent = '';
+
   popupOverlay.classList.remove('open');
   popupOverlay.setAttribute('aria-hidden', 'true');
   popupContent.innerHTML = '';
