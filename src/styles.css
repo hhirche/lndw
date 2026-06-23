@@ -296,6 +296,29 @@ html, body {
   border-color: var(--panel-border) !important;
 }
 .leaflet-control-zoom a:hover { background: var(--bg-2) !important; color: var(--accent) !important; }
+
+/* Reset map button (sits above zoom control, matches its style) */
+.reset-map-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid var(--panel-border);
+  background: var(--panel-solid);
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: 80ms background;
+}
+.reset-map-btn:hover {
+  background: var(--bg-2);
+  color: var(--accent);
+}
+
 .leaflet-control-attribution {
   background: rgba(11, 16, 32, 0.8) !important;
   color: var(--text-faint) !important;

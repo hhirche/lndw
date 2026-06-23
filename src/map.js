@@ -1,5 +1,5 @@
 // map.js — Leaflet map init, venue markers, popups, flyTo, lightweight clustering.
-// Exposes: initMap(events, venues), updateMarkers(visibleEventIds), flyToVenue(venueId), openVenuePopup(venueId), closeVenuePopup()
+// Exposes: initMap(events, venues), updateMarkers(visibleEventIds), flyToVenue(venueId), openVenuePopup(venueId), closeVenuePopup(), resetMapView()
 
 const DRESDEN_CENTER = [51.0504, 13.7373];
 let map = null;
@@ -72,9 +72,33 @@ export function initMap(events, venues, onSelectEvent) {
   map = L.map('map', {
     center: DRESDEN_CENTER,
     zoom: 13,
-    zoomControl: true,
+    zoomControl: false,
     scrollWheelZoom: true,
   });
+
+  // Reset-map control (placed above zoom via DOM order)
+  const resetControl = L.control({ position: 'topleft' });
+  resetControl.onAdd = function () {
+    const el = L.DomUtil.create('div', 'leaflet-control-reset leaflet-bar leaflet-control');
+    el.innerHTML = `
+      <button type="button" class="reset-map-btn" aria-label="Kartenansicht zurücksetzen" title="Alle sichtbaren Orte einpassen">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2.5" y="2.5" width="15" height="15" rx="1.5"/>
+          <path d="M7 7 L3 3 M3 3 L5.5 3 M3 3 L3 5.5"/>
+          <path d="M13 13 L17 17 M17 17 L14.5 17 M17 17 L17 14.5"/>
+        </svg>
+      </button>`;
+    L.DomEvent.on(el.querySelector('button'), 'click', (e) => {
+      L.DomEvent.stopPropagation(e);
+      L.DomEvent.preventDefault(e);
+      resetMapView();
+    });
+    return el;
+  };
+  resetControl.addTo(map);
+
+  // Zoom control (added after reset so it stacks below)
+  L.control.zoom({ position: 'topleft' }).addTo(map);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -181,6 +205,20 @@ function renderClusters() {
       cluster.addTo(clusterLayer);
     }
   }
+}
+
+export function resetMapView() {
+  if (!map) return;
+  const points = [];
+  for (const venueId of _visibleVenueIds) {
+    const venue = _venues.get(venueId);
+    if (venue && venue.lat != null && venue.lng != null) {
+      points.push([venue.lat, venue.lng]);
+    }
+  }
+  if (points.length === 0) return;
+  const bounds = L.latLngBounds(points);
+  map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
 }
 
 export function updateMarkers(visibleEventIds) {
