@@ -170,6 +170,11 @@ export function initFilters(events, venues, filters, onChange) {
   backdrop.addEventListener('click', () => {
     closeFilters();
   });
+  // pointerup fires reliably on touch devices (no 300ms delay)
+  backdrop.addEventListener('pointerup', (e) => {
+    e.preventDefault();
+    closeFilters();
+  });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !panel.classList.contains('collapsed')) {

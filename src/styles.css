@@ -144,18 +144,24 @@ html, body {
   position: absolute;
   top: 0;
   bottom: 0;
-  left: 0;
   width: 300px;
   background: var(--panel);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-right: 1px solid var(--panel-border);
   display: flex;
   flex-direction: column;
   transition: transform var(--transition);
   z-index: 900;
 }
-.filters-panel.collapsed { transform: translateX(-100%); }
+
+/* Desktop: anchored left, slides left to close */
+@media (min-width: 769px) {
+  .filters-panel {
+    left: 0;
+    border-right: 1px solid var(--panel-border);
+  }
+  .filters-panel.collapsed { transform: translateX(-100%); }
+}
 .filters-header {
   display: flex;
   align-items: center;
@@ -505,6 +511,9 @@ html, body {
 .filters-backdrop.visible {
   opacity: 1;
   pointer-events: auto;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Card content */
@@ -640,6 +649,7 @@ html, body {
   .header-search { max-width: none; }
   .filters-toggle-label { display: none; }
   .filters-panel {
+    /* Explicitly anchored to right, overlaid on map */
     left: auto;
     right: 0;
     width: 88vw;
