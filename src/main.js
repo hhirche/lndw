@@ -43,7 +43,7 @@ async function main() {
         (v.eventIds || []).some(id => visibleSet.has(id))
       ).length;
       updateMarkers(visibleIds);
-      countEl.innerHTML = `<strong>${visibleIds.length}</strong> Veranstaltungen an <strong>${visibleVenueCount}</strong> Orten (von ${events.length})`;
+      countEl.innerHTML = `<strong>${visibleIds.length}</strong> Veranstaltungen an <strong>${visibleVenueCount}</strong> Orten`;
     };
     initFilters(events, venues, filters, onChange);
 
