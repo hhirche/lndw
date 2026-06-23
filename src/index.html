@@ -18,14 +18,19 @@
         <div class="brand">
           <span class="brand-icon" aria-hidden="true">🔬</span>
           <div class="brand-text">
-            <h1>Lange Nacht der Wissenschaften 2026</h1>
+            <h1>
+              <a href="https://www.wissenschaftsnacht-dresden.de" target="_blank" rel="noopener noreferrer">
+                Lange Nacht der Wissenschaften 2026
+                <span class="external-link-icon" aria-label="Externer Link">↗</span>
+              </a>
+            </h1>
             <p class="brand-sub">Dresden · Interaktive Programmkarte</p>
           </div>
         </div>
         <div class="header-search">
           <input type="search" id="search-input" placeholder="Suche nach Veranstaltungen…" autocomplete="off" aria-label="Suche">
         </div>
-        <button class="filters-toggle" id="filters-toggle" aria-label="Filter ein-/ausblenden" aria-expanded="true">
+        <button class="filters-toggle" id="filters-toggle" aria-label="Filter ein-/ausblenden" aria-expanded="false">
           <span class="filters-toggle-icon">⚙</span>
           <span class="filters-toggle-label">Filter</span>
         </button>
@@ -33,7 +38,7 @@
     </header>
 
     <main class="app-main">
-      <aside class="filters-panel" id="filters-panel" aria-label="Filter">
+      <aside class="filters-panel collapsed" id="filters-panel" aria-label="Filter">
         <div class="filters-header">
           <h2>Filter</h2>
           <button class="btn-link" id="reset-filters">Zurücksetzen</button>
@@ -88,6 +93,9 @@
     </section>
 
     <div class="drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
+
+    <!-- Filter backdrop (mobile tap-to-dismiss) -->
+    <div class="filters-backdrop" id="filters-backdrop" aria-hidden="true"></div>
 
     <!-- Venue popup overlay (screen-centered, zoom animation from marker) -->
     <div class="popup-overlay" id="popup-overlay" aria-hidden="true">

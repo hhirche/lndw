@@ -140,12 +140,41 @@ export function initFilters(events, venues, filters, onChange) {
     emit();
   });
 
-  // Filters toggle (mobile)
+  // Filters toggle
   const toggle = document.getElementById('filters-toggle');
   const panel = document.getElementById('filters-panel');
+  const backdrop = document.getElementById('filters-backdrop');
+
+  function openFilters() {
+    panel.classList.remove('collapsed');
+    toggle.setAttribute('aria-expanded', 'true');
+    backdrop.classList.add('visible');
+    backdrop.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeFilters() {
+    panel.classList.add('collapsed');
+    toggle.setAttribute('aria-expanded', 'false');
+    backdrop.classList.remove('visible');
+    backdrop.setAttribute('aria-hidden', 'true');
+  }
+
   toggle.addEventListener('click', () => {
-    panel.classList.toggle('collapsed');
-    toggle.setAttribute('aria-expanded', String(!panel.classList.contains('collapsed')));
+    if (panel.classList.contains('collapsed')) {
+      openFilters();
+    } else {
+      closeFilters();
+    }
+  });
+
+  backdrop.addEventListener('click', () => {
+    closeFilters();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !panel.classList.contains('collapsed')) {
+      closeFilters();
+    }
   });
 
   // Sync from URL on load
