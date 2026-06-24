@@ -62,12 +62,17 @@ function parseAddress(html) {
     if (ROOM_DESCRIPTION.test(f)) return 0;
     // Exclude fragments containing non-street keywords anywhere
     if (NON_STREET_ANYWHERE.test(f)) return 0;
+    // Strip parenthesized content for scoring: street addresses inside parens
+    // are supplementary/alternate (e.g. "KAZ (Dürerstraße 28, 01307 Dresden)")
+    // and should not compete with the primary street line.
+    const clean = f.replace(/\([^)]*\)?/g, '').trim();
+    if (!clean) return 0;
     // Classic German address pattern: suffix directly followed by house number (boost +1)
-    const isClassicAddress = /(stra[sß]e|str\.?|weg|platz|allee|gasse|ring|ufer|chaussee|promenade|berg|höhe|damm|graben|wall|pforte|tor|brücke|hof)\s+\d+/i.test(f);
-    if (STREET_SUFFIX.test(f) && /\d/.test(f)) return isClassicAddress ? 3 : 2; // best: suffix + number, boosted if classic
-    if (STREET_SUFFIX.test(f)) return isClassicAddress ? 2 : 1; // suffix only, boosted if classic
+    const isClassicAddress = /(stra[sß]e|str\.?|weg|platz|allee|gasse|ring|ufer|chaussee|promenade|berg|höhe|damm|graben|wall|pforte|tor|brücke|hof)\s+\d+/i.test(clean);
+    if (STREET_SUFFIX.test(clean) && /\d/.test(clean)) return isClassicAddress ? 3 : 2; // best: suffix + number, boosted if classic
+    if (STREET_SUFFIX.test(clean)) return isClassicAddress ? 2 : 1; // suffix only, boosted if classic
     // "Word number" pattern, at least 4 chars, not a room code
-    if (/^[^0-9]{4,}.*\d+/.test(f) && f.length < 60) return 1;
+    if (/^[^0-9]{4,}.*\d+/.test(clean) && clean.length < 60) return 1;
     return 0;
   };
   let bestScore = 0;
