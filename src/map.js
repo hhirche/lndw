@@ -188,7 +188,10 @@ function renderClusters() {
       const venues = venueIds.map(id => _venues.get(id)).filter(Boolean);
       const avgLat = venues.reduce((s, v) => s + v.lat, 0) / venues.length;
       const avgLng = venues.reduce((s, v) => s + v.lng, 0) / venues.length;
-      const totalEvents = venues.reduce((s, v) => s + (v.eventIds?.length || 0), 0);
+      const totalEvents = venueIds.reduce((s, id) => {
+        const m = markersByVenueId.get(id);
+        return s + (m?._filteredEventIds?.length ?? 0);
+      }, 0);
       const clusterIcon = L.divIcon({
         className: '',
         html: `<div class="venue-marker cluster-marker" style="width:44px;height:44px;background:var(--accent-2);">${totalEvents}</div>`,
