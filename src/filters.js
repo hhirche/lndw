@@ -206,6 +206,25 @@ export function initFilters(events, venues, filters, onChange) {
     }, 150);
   });
 
+  // Filters toggle active state
+  const filtersToggle = document.getElementById('filters-toggle');
+
+  function updateFiltersToggleState() {
+    const active = _state.timeFrom != null || _state.timeTo != null ||
+      !!_state.organizer || !!_state.venue || !!_state.district ||
+      !!_state.format || _state.interests.size > 0;
+    filtersToggle.classList.toggle('active', active);
+    filtersToggle.setAttribute('aria-label',
+      active ? 'Filter bearbeiten (aktiv)' : 'Filter ein-/ausblenden');
+  }
+
+  function emit() {
+    syncToUrl();
+    updateSearchToggleState();
+    updateFiltersToggleState();
+    if (_onChange) _onChange(getVisibleEventIds());
+  }
+
   // Reset
   document.getElementById('reset-filters').addEventListener('click', () => {
     _state = createEmptyState();
@@ -265,11 +284,6 @@ export function initFilters(events, venues, filters, onChange) {
   updateSearchClear();
   updateSearchToggleState();
   emit();
-}
-
-function emit() {
-  syncToUrl();
-  if (_onChange) _onChange(getVisibleEventIds());
 }
 
 export function getVisibleEventIds() {

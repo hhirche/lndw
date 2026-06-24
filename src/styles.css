@@ -127,9 +127,33 @@ html, body {
   cursor: pointer;
   transition: var(--transition);
   flex-shrink: 0;
+  position: relative;
 }
 .filters-toggle:hover { border-color: var(--accent); color: var(--accent); }
 .filters-toggle-icon { font-size: 16px; }
+
+/* Active state: highlighted when any filter is active */
+.filters-toggle.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 229, 255, 0.1);
+}
+.filters-toggle.active .filters-toggle-dot {
+  display: block;
+}
+
+/* Small dot indicator when filters active */
+.filters-toggle-dot {
+  display: none;
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
 
 /* Search toggle / back / clear (mobile — hidden on desktop by default) */
 .search-toggle,
