@@ -44,7 +44,7 @@ function buildPopupContent(venue) {
 
   const items = venueEvents.map(ev => `
     <a class="popup-event" data-event-id="${ev.id}" href="#" role="button">
-      <div class="popup-event-time">${formatTime(ev.beginMin)}${ev.endMin ? ' – ' + formatTime(ev.endMin) : ''} Uhr</div>
+      <div class="popup-event-time">${formatTimeSafe(ev.beginMin, ev.begin)}${(ev.endMin != null || ev.end) ? ' – ' + formatTimeSafe(ev.endMin, ev.end) : ''} Uhr</div>
       <div class="popup-event-title">${escapeHtml(ev.title)}</div>
       ${ev.formats && ev.formats.length ? `<div class="popup-event-format">${escapeHtml(ev.formats.join(', '))}</div>` : ''}
     </a>
@@ -55,6 +55,13 @@ function buildPopupContent(venue) {
       <div class="popup-event-list">${items || '<div class="popup-event-title">Keine Veranstaltungen</div>'}</div>
     </div>
   `;
+}
+
+function formatTimeSafe(minVal, strVal) {
+  if (minVal != null) return formatTime(minVal);
+  // Fallback: use string field if numeric minutes are missing
+  if (strVal) return strVal.replace(/\s*Uhr\s*$/i, '');
+  return '';
 }
 
 function escapeHtml(s) {

@@ -13,8 +13,11 @@ const OUT_DIR = resolve(__dirname, '..', 'src', 'data');
 mkdirSync(OUT_DIR, { recursive: true });
 
 function timeToMinutes(t) {
-  if (!t || !/^\d{1,2}:\d{2}$/.test(t)) return null;
-  const [h, m] = t.split(':').map(Number);
+  if (!t) return null;
+  // Strip optional " Uhr" suffix (scraper produces "HH:MM Uhr", initial data is bare "HH:MM")
+  const cleaned = t.replace(/\s*Uhr\s*$/i, '').trim();
+  if (!/^\d{1,2}:\d{2}$/.test(cleaned)) return null;
+  const [h, m] = cleaned.split(':').map(Number);
   return h * 60 + m;
 }
 
