@@ -20,15 +20,16 @@ Eine neu aufgebaute, map-zentrierte Website für das Programm der **Dresdner Lan
 LNDW/
 ├── scraper/              # Datengewinnung (Node, keine Runtime-Dependencies)
 │   ├── data/             # Rohdaten + Cache
-│   │   ├── cards.json        # Extrahierte Karten vom Browser
-│   │   ├── details.json      # Extrahierte Detailseiten vom Browser
+│   │   ├── cards.json        # Aus programm.html extrahierte Karten
+│   │   ├── details.json      # Von Detailseiten extrahierte Daten
 │   │   ├── scrape-raw.json   # Zusammengeführte Rohdaten
 │   │   ├── geocode-cache.json# Geocoding-Cache
 │   │   └── venues.json       # Geocodete Veranstaltungsorte
+│   ├── extract-cards.mjs # programm.html → cards.json
+│   ├── update-details.mjs# Fehlende Detailseiten nachladen → details.json
 │   ├── merge.mjs         # cards.json + details.json → scrape-raw.json
 │   ├── geocode.mjs       # Adressen → Koordinaten (Photon/Komoot)
-│   ├── build.mjs         # scrape-raw.json + venues.json → src/data/*.json
-│   └── receive.mjs       # HTTP-Receiver für Browser-Scraping
+│   └── build.mjs         # scrape-raw.json + venues.json → src/data/*.json
 ├── src/                  # Statische Website
 │   ├── index.html
 │   ├── styles.css
@@ -47,35 +48,48 @@ LNDW/
 ### 1. Voraussetzungen
 - Node.js 18+ (keine npm-Installation nötig — nur Standardmodule)
 
-### 2. Daten scrapen (via VS Code integriertem Browser)
+### 2. Daten aktualisieren
 
-Das Scraping nutzt den in VS Code integrierten Browser (Playwright), da die Originalseite Karten via JavaScript lädt.
+Die Programmseite rendert alle Veranstaltungen serverseitig als HTML — ein JavaScript-Browser ist zum Scrapen nicht nötig. Die Aktualisierung erfolgt in drei Schritten:
 
-```powershell
-# a) Receiver starten (für Browser → Datei-Transfer)
-node scraper\receive.mjs scraper\data\cards.json
+**a) Programmseite herunterladen und Karten extrahieren**
 
-# b) Im VS Code Browser: https://www.wissenschaftsnacht-dresden.de/programm öffnen
-#    Dann via Copilot Browser-Tools page.evaluate ausführen, um Karten zu extrahieren
-#    und an den Receiver zu POSTen. (Siehe scraper/merge.mjs für Feldstruktur.)
+`extract-cards.mjs` parst das HTML der Programmseite und extrahiert aus jeder Event-Karte Titel, Teaser, Veranstalter, Zeiten und Formate. Das Ergebnis ist `cards.json` — eine Karte pro Event.
 
-# c) Details analog: Receiver für details.json starten, Detailseiten via fetch+DOMParser
-#    im Browser extrahieren und POSTen.
+```bash
+curl -o scraper/data/programm.html https://www.wissenschaftsnacht-dresden.de/programm
+node scraper/extract-cards.mjs
 ```
 
-### 3. Daten zusammenführen & aufbereiten
+**b) Detailseiten nachladen**
 
-```powershell
-node scraper\merge.mjs       # cards + details → scrape-raw.json
-node scraper\geocode.mjs     # Adressen → Koordinaten (Photon API, gecacht)
-node scraper\build.mjs       # → src/data/{events,venues,filters}.json
+`update-details.mjs` vergleicht `cards.json` mit dem vorhandenen `details.json` und lädt nur für Karten, zu denen noch kein Detail-Datensatz existiert, die individuelle Detailseite nach. Aus jeder Seite werden Beschreibung, Adresse, Links und weitere Felder extrahiert. Existierende Detail-Datensätze bleiben unangetastet.
+
+```bash
+node scraper/update-details.mjs
 ```
 
-### 4. Website bauen & ansehen
+**c) Daten zusammenführen und aufbereiten**
+
+Die drei folgenden Skripte erzeugen aus den Rohdaten die finalen JSON-Dateien für die Website:
+
+| Skript | Eingabe | Ausgabe | Beschreibung |
+|--------|---------|---------|--------------|
+| `merge.mjs` | `cards.json` + `details.json` | `scrape-raw.json` | Führt Karten- und Detaildaten pro Event zusammen, parst Adressen |
+| `geocode.mjs` | `scrape-raw.json` (+ Cache) | `venues.json` | Löst Adressen über die Photon-API zu Koordinaten auf (Ergebnisse werden gecacht) |
+| `build.mjs` | `scrape-raw.json` + `venues.json` | `src/data/{events,venues,filters}.json` | Baut die finalen Datenstrukturen, weist Venue-IDs zu, generiert Filterlisten |
+
+```bash
+node scraper/merge.mjs
+node scraper/geocode.mjs
+node scraper/build.mjs
+```
+
+### 3. Website bauen & ansehen
 
 > **Wichtig:** Nicht `python -m http.server` verwenden! Python serviert `.js`-Dateien als `text/plain`, was Browser für ES-Module ablehnen. Die Seite lädt dann endlos. Stattdessen den mitgelieferten `serve.mjs` verwenden, der korrekte MIME-Types setzt.
 
-```powershell
+```bash
 # Für Entwicklung: src/ direkt serven
 node serve.mjs src 8000
 # → http://localhost:8000
