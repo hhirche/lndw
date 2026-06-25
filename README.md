@@ -57,7 +57,7 @@ LNDW/
 
 ### 2. Daten aktualisieren
 
-Die Programmseite rendert alle Veranstaltungen serverseitig als HTML — ein JavaScript-Browser ist zum Scrapen nicht nötig. Die Aktualisierung erfolgt in sechs Schritten: **Backup → Scrapen → Patchen → Aufbereiten → Diff → Review**.
+Die Programmseite rendert alle Veranstaltungen serverseitig als HTML — ein JavaScript-Browser ist zum Scrapen nicht nötig. Die Aktualisierung erfolgt in sieben Schritten: **Backup → Scrapen → Mergen → Patchen → Geocodieren → Build → Diff → Review**.
 
 **a) Backup der aktuellen Daten**
 
@@ -84,9 +84,17 @@ node scraper/extract-cards.mjs
 node scraper/update-details.mjs
 ```
 
-**d) Adressdaten manuell korrigieren (optional)**
+**d) Daten zusammenführen**
 
-Die Original-Website enthält gelegentlich falsche Adressen — z. B. wenn eine Veranstaltung laut Detailseite an einem Ort stattfindet, tatsächlich aber woanders. Mit `patch.mjs` können einzelne Adressfelder pro Event überschrieben werden, bevor die Adressen geocodiert werden.
+`merge.mjs` führt die Karten- und Detaildaten pro Event zusammen und parst die Adressblöcke in strukturierte Felder. Ausgabe ist `scrape-raw.json` — eine vollständige Event-Liste, die im nächsten Schritt gepatcht werden kann.
+
+```bash
+node scraper/merge.mjs
+```
+
+**e) Adressdaten manuell korrigieren (optional)**
+
+Die Original-Website enthält gelegentlich falsche Adressen — z. B. wenn eine Veranstaltung laut Detailseite an einem Ort stattfindet, tatsächlich aber woanders. Mit `patch.mjs` können einzelne Adressfelder im zuvor erzeugten `scrape-raw.json` überschrieben werden, bevor die Adressen geocodiert werden.
 
 Patches werden in `scraper/data/patches.json` als JSON hinterlegt:
 
@@ -116,23 +124,21 @@ Patches werden in `scraper/data/patches.json` als JSON hinterlegt:
 node scraper/patch.mjs
 ```
 
-**e) Daten zusammenführen und aufbereiten**
+**f) Geocodieren und finale Daten bauen**
 
-Die drei folgenden Skripte erzeugen aus den Rohdaten die finalen JSON-Dateien für die Website:
+Die beiden folgenden Skripte erzeugen aus dem gepatchten `scrape-raw.json` die finalen JSON-Dateien für die Website:
 
 | Skript | Eingabe | Ausgabe | Beschreibung |
 |--------|---------|---------|--------------|
-| `merge.mjs` | `cards.json` + `details.json` | `scrape-raw.json` | Führt Karten- und Detaildaten pro Event zusammen, parst Adressen |
 | `geocode.mjs` | `scrape-raw.json` (+ Cache) | `venues.json` | Löst Adressen über die Photon-API zu Koordinaten auf (Ergebnisse werden gecacht) |
 | `build.mjs` | `scrape-raw.json` + `venues.json` | `src/data/{events,venues,filters}.json` | Baut die finalen Datenstrukturen, weist Venue-IDs zu, generiert Filterlisten |
 
 ```bash
-node scraper/merge.mjs
 node scraper/geocode.mjs
 node scraper/build.mjs
 ```
 
-**f) Diff gegen Backup**
+**g) Diff gegen Backup**
 
 `diff.mjs` vergleicht die Backup-Dateien (`backup-events.json`, `backup-venues.json`) mit den aktuellen Daten (`src/data/events.json`, `src/data/venues.json`) und schreibt einen menschenlesbaren Diff-Report nach `scraper/data/diff.md`. Der Report listet Hinzufügungen, Änderungen (auf Feldebene) und Entfernungen — für Events und Venues getrennt. Bei Venues werden Änderungen an Geokoordinaten (lat/lng) gesondert hervorgehoben.
 
