@@ -23,6 +23,7 @@ LNDW/
 │   │   ├── cards.json        # Aus programm.html extrahierte Karten
 │   │   ├── details.json      # Von Detailseiten extrahierte Daten
 │   │   ├── scrape-raw.json   # Zusammengeführte Rohdaten
+│   │   ├── patches.json      # Manuelle Adress-Patches (überschreibt scrape-raw nach merge)
 │   │   ├── geocode-cache.json# Geocoding-Cache
 │   │   ├── venues.json       # Geocodete Veranstaltungsorte
 │   │   ├── backup-events.json# Backup der letzten events.json (überschrieben bei jedem Update)
@@ -32,6 +33,7 @@ LNDW/
 │   ├── extract-cards.mjs  # programm.html → cards.json
 │   ├── update-details.mjs # Fehlende Detailseiten nachladen → details.json
 │   ├── merge.mjs          # cards.json + details.json → scrape-raw.json
+│   ├── patch.mjs          # patches.json → scrape-raw.json (manuelle Adresskorrekturen)
 │   ├── geocode.mjs        # Adressen → Koordinaten (Photon/Komoot)
 │   ├── diff.mjs           # Vergleicht backup-*.json mit aktuellen Daten → diff.md
 │   └── build.mjs          # scrape-raw.json + venues.json → src/data/*.json
@@ -55,7 +57,7 @@ LNDW/
 
 ### 2. Daten aktualisieren
 
-Die Programmseite rendert alle Veranstaltungen serverseitig als HTML — ein JavaScript-Browser ist zum Scrapen nicht nötig. Die Aktualisierung erfolgt in fünf Schritten: **Backup → Scrapen → Aufbereiten → Diff → Review**.
+Die Programmseite rendert alle Veranstaltungen serverseitig als HTML — ein JavaScript-Browser ist zum Scrapen nicht nötig. Die Aktualisierung erfolgt in sechs Schritten: **Backup → Scrapen → Patchen → Aufbereiten → Diff → Review**.
 
 **a) Backup der aktuellen Daten**
 
@@ -82,7 +84,39 @@ node scraper/extract-cards.mjs
 node scraper/update-details.mjs
 ```
 
-**d) Daten zusammenführen und aufbereiten**
+**d) Adressdaten manuell korrigieren (optional)**
+
+Die Original-Website enthält gelegentlich falsche Adressen — z. B. wenn eine Veranstaltung laut Detailseite an einem Ort stattfindet, tatsächlich aber woanders. Mit `patch.mjs` können einzelne Adressfelder pro Event überschrieben werden, bevor die Adressen geocodiert werden.
+
+Patches werden in `scraper/data/patches.json` als JSON hinterlegt:
+
+```json
+{
+  "patches": {
+    "<event-id>": {
+      "_note": "<Begründung>",
+      "address": {
+        "street": "<korrigierte Straße>",
+        "zip": "<korrigierte PLZ>",
+        "city": "<korrigierter Ort>",
+        "district": "<korrigierter Stadtteil>",
+        "building": "<korrigiertes Gebäude>"
+      }
+    }
+  }
+}
+```
+
+- Der Key ist die numerische Event-ID (aus der Detail-URL, z. B. `...-15765` → `"15765"`)
+- Nur die Felder angeben, die korrigiert werden sollen — alle anderen bleiben unverändert
+- `_note` dient der Dokumentation und wird vom Skript ignoriert
+- Nach dem Patchen werden die korrigierten Adressen wie gewohnt geocodiert und landen in den finalen Daten
+
+```bash
+node scraper/patch.mjs
+```
+
+**e) Daten zusammenführen und aufbereiten**
 
 Die drei folgenden Skripte erzeugen aus den Rohdaten die finalen JSON-Dateien für die Website:
 
@@ -98,7 +132,7 @@ node scraper/geocode.mjs
 node scraper/build.mjs
 ```
 
-**e) Diff gegen Backup**
+**f) Diff gegen Backup**
 
 `diff.mjs` vergleicht die Backup-Dateien (`backup-events.json`, `backup-venues.json`) mit den aktuellen Daten (`src/data/events.json`, `src/data/venues.json`) und schreibt einen menschenlesbaren Diff-Report nach `scraper/data/diff.md`. Der Report listet Hinzufügungen, Änderungen (auf Feldebene) und Entfernungen — für Events und Venues getrennt. Bei Venues werden Änderungen an Geokoordinaten (lat/lng) gesondert hervorgehoben.
 
