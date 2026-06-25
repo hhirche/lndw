@@ -41,6 +41,41 @@ async function geocode(query) {
   const data = await fetchJson(url);
   if (data && data.features && data.features.length > 0) {
     const f = data.features[0];
+
+    // Quality gate: if the query contains a house number, verify the Photon
+    // result actually matches. Two failure modes:
+    // 1. No housenumber AND no street → street/area centroid (e.g. wrong zip
+    //    caused Photon to return the street way instead of the address point).
+    // 2. Has housenumber but it doesn't match any candidate from the query →
+    //    Photon fuzzy-matched a different address (e.g. "Str. 1b" → house 14).
+    //
+    // Collect all house-number candidates from the query (handle ranges like
+    // "12-14", "3/5" and alphanumeric like "3b", "1 b").
+    const candidates = [];
+    const singleRE = /\b(\d{1,4})\s*([a-zA-Z]?)(?=\b|[,-]|\s|$)/g;
+    let m;
+    while ((m = singleRE.exec(query)) !== null) {
+      candidates.push((m[1] + m[2]).toLowerCase());
+    }
+    const rangeRE = /\b(\d{1,4})\s*[-/]\s*(\d{1,4})\b/g;
+    while ((m = rangeRE.exec(query)) !== null) {
+      candidates.push(m[1].toLowerCase());
+      candidates.push(m[2].toLowerCase());
+    }
+    const expectedHNs = [...new Set(candidates)];
+
+    if (expectedHNs.length > 0) {
+      const resultHN = (f.properties.housenumber || '').toLowerCase().replace(/\s+/g, '');
+      // Case 1: street/area centroid
+      if (!f.properties.housenumber && !f.properties.street) {
+        return null;
+      }
+      // Case 2: result housenumber matches none of the query candidates
+      if (resultHN && !expectedHNs.some(e => resultHN.startsWith(e))) {
+        return null;
+      }
+    }
+
     const [lng, lat] = f.geometry.coordinates;
     return { lat, lng, displayName: f.properties.name ? `${f.properties.name}, ${f.properties.city || ''}` : `${f.properties.street || ''} ${f.properties.housenumber || ''}, ${f.properties.city || ''}` };
   }
@@ -102,26 +137,30 @@ async function main() {
       continue;
     }
     try {
-      // Try building name first — Photon resolves campus building names more precisely
-      // than house numbers on streets like George-Bähr-Str.
       let r = null;
       const buildingNames = extractBuildingNames(venue.address?.building);
-      for (const bn of buildingNames) {
-        r = await geocode(`${bn}, Dresden`);
-        if (r) break;
-        await sleep(100);
-      }
+
       // Primary: street + zip + Dresden
-      if (!r) {
-        r = await geocode(key);
-      }
+      r = await geocode(key);
+
       if (!r && venue.address?.street) {
-        // Fallback 1: street + zip + Dresden (explicit)
+        // Fallback 1: street + zip + Dresden (explicit, whitespace-normalized)
         r = await geocode(`${venue.address.street}, ${venue.address.zip || ''} Dresden`.replace(/\s+/g, ' ').trim());
       }
       if (!r && venue.address?.street) {
-        // Fallback 2: street + Dresden only
+        // Fallback 2: street + Dresden only (drops potentially wrong zip code)
         r = await geocode(`${venue.address.street}, Dresden`);
+      }
+      // Building-name fallbacks: only when street-based queries fail, because
+      // a street address can host multiple buildings (e.g. Zeuner-Bau and
+      // Walter-Frenzel-Bau both at George-Bähr-Straße 3c). Using a building
+      // name prematurely would pick the wrong one for some events.
+      if (!r) {
+        for (const bn of buildingNames) {
+          r = await geocode(`${bn}, Dresden`);
+          if (r) break;
+          await sleep(100);
+        }
       }
       if (!r && venue.address?.street) {
         // Fallback 3: building name + street + Dresden
