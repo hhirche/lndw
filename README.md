@@ -19,17 +19,22 @@ Eine neu aufgebaute, map-zentrierte Website für das Programm der **Dresdner Lan
 ```
 LNDW/
 ├── scraper/              # Datengewinnung (Node, keine Runtime-Dependencies)
-│   ├── data/             # Rohdaten + Cache
+│   ├── data/             # Rohdaten + Cache + Backup + Diff
 │   │   ├── cards.json        # Aus programm.html extrahierte Karten
 │   │   ├── details.json      # Von Detailseiten extrahierte Daten
 │   │   ├── scrape-raw.json   # Zusammengeführte Rohdaten
 │   │   ├── geocode-cache.json# Geocoding-Cache
-│   │   └── venues.json       # Geocodete Veranstaltungsorte
-│   ├── extract-cards.mjs # programm.html → cards.json
-│   ├── update-details.mjs# Fehlende Detailseiten nachladen → details.json
-│   ├── merge.mjs         # cards.json + details.json → scrape-raw.json
-│   ├── geocode.mjs       # Adressen → Koordinaten (Photon/Komoot)
-│   └── build.mjs         # scrape-raw.json + venues.json → src/data/*.json
+│   │   ├── venues.json       # Geocodete Veranstaltungsorte
+│   │   ├── backup-events.json# Backup der letzten events.json (überschrieben bei jedem Update)
+│   │   ├── backup-venues.json# Backup der letzten venues.json (überschrieben bei jedem Update)
+│   │   └── diff.md           # Diff-Report (menschenlesbar, zeigt Δ zwischen Backup und aktuellen Daten)
+│   ├── backup.mjs         # src/data/{events,venues}.json → backup-*.json
+│   ├── extract-cards.mjs  # programm.html → cards.json
+│   ├── update-details.mjs # Fehlende Detailseiten nachladen → details.json
+│   ├── merge.mjs          # cards.json + details.json → scrape-raw.json
+│   ├── geocode.mjs        # Adressen → Koordinaten (Photon/Komoot)
+│   ├── diff.mjs           # Vergleicht backup-*.json mit aktuellen Daten → diff.md
+│   └── build.mjs          # scrape-raw.json + venues.json → src/data/*.json
 ├── src/                  # Statische Website
 │   ├── index.html
 │   ├── styles.css
@@ -50,9 +55,17 @@ LNDW/
 
 ### 2. Daten aktualisieren
 
-Die Programmseite rendert alle Veranstaltungen serverseitig als HTML — ein JavaScript-Browser ist zum Scrapen nicht nötig. Die Aktualisierung erfolgt in drei Schritten:
+Die Programmseite rendert alle Veranstaltungen serverseitig als HTML — ein JavaScript-Browser ist zum Scrapen nicht nötig. Die Aktualisierung erfolgt in fünf Schritten: **Backup → Scrapen → Aufbereiten → Diff → Review**.
 
-**a) Programmseite herunterladen und Karten extrahieren**
+**a) Backup der aktuellen Daten**
+
+Vor jeder Aktualisierung werden die aktuellen finalen Daten gesichert. `backup.mjs` kopiert `events.json` und `venues.json` aus `src/data/` als `backup-events.json` und `backup-venues.json` nach `scraper/data/`. Die Backup-Dateien werden bei jedem Lauf überschrieben — es gibt immer nur eine Instanz.
+
+```bash
+node scraper/backup.mjs
+```
+
+**b) Programmseite herunterladen und Karten extrahieren**
 
 `extract-cards.mjs` parst das HTML der Programmseite und extrahiert aus jeder Event-Karte Titel, Teaser, Veranstalter, Zeiten und Formate. Das Ergebnis ist `cards.json` — eine Karte pro Event.
 
@@ -61,7 +74,7 @@ curl -o scraper/data/programm.html https://www.wissenschaftsnacht-dresden.de/pro
 node scraper/extract-cards.mjs
 ```
 
-**b) Detailseiten nachladen**
+**c) Detailseiten nachladen**
 
 `update-details.mjs` vergleicht `cards.json` mit dem vorhandenen `details.json` und lädt nur für Karten, zu denen noch kein Detail-Datensatz existiert, die individuelle Detailseite nach. Aus jeder Seite werden Beschreibung, Adresse, Links und weitere Felder extrahiert. Existierende Detail-Datensätze bleiben unangetastet.
 
@@ -69,7 +82,7 @@ node scraper/extract-cards.mjs
 node scraper/update-details.mjs
 ```
 
-**c) Daten zusammenführen und aufbereiten**
+**d) Daten zusammenführen und aufbereiten**
 
 Die drei folgenden Skripte erzeugen aus den Rohdaten die finalen JSON-Dateien für die Website:
 
@@ -84,6 +97,16 @@ node scraper/merge.mjs
 node scraper/geocode.mjs
 node scraper/build.mjs
 ```
+
+**e) Diff gegen Backup**
+
+`diff.mjs` vergleicht die Backup-Dateien (`backup-events.json`, `backup-venues.json`) mit den aktuellen Daten (`src/data/events.json`, `src/data/venues.json`) und schreibt einen menschenlesbaren Diff-Report nach `scraper/data/diff.md`. Der Report listet Hinzufügungen, Änderungen (auf Feldebene) und Entfernungen — für Events und Venues getrennt. Bei Venues werden Änderungen an Geokoordinaten (lat/lng) gesondert hervorgehoben.
+
+```bash
+node scraper/diff.mjs
+```
+
+Der erzeugte `diff.md` kann vor dem Commit manuell geprüft werden, um die Plausibilität der Änderungen sicherzustellen.
 
 ### 3. Website bauen & ansehen
 

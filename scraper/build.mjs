@@ -104,30 +104,39 @@ function main() {
     if (v) venuesById.get(v.id).eventIds.push(id);
   }
 
-  // Assign events with no venue (empty address) to their organizer's primary venue
-  // (the venue with the most events for that organizer).
+  // Assign events with no venue (empty address) or whose venue has no coordinates
+  // to their organizer's primary venue (the one with the most events at a geocoded venue).
   const orgVenueCount = new Map(); // organizer -> Map(venueId -> count)
   for (const ev of events) {
     if (!ev.venueId) continue;
+    const v = venuesById.get(ev.venueId);
+    if (!v || v.lat == null) continue; // only count geocoded venues as valid targets
     if (!orgVenueCount.has(ev.organizer)) orgVenueCount.set(ev.organizer, new Map());
     const m = orgVenueCount.get(ev.organizer);
     m.set(ev.venueId, (m.get(ev.venueId) || 0) + 1);
   }
   let reassigned = 0;
   for (const ev of events) {
-    if (ev.venueId) continue;
+    const v = venuesById.get(ev.venueId);
+    // Already has a valid venue with coordinates — nothing to do
+    if (ev.venueId && v && v.lat != null) continue;
     const m = orgVenueCount.get(ev.organizer);
     if (!m || m.size === 0) continue;
     // Pick the venue with the most events for this organizer
     let bestVenueId = null, bestCount = 0;
     for (const [vid, cnt] of m) { if (cnt > bestCount) { bestCount = cnt; bestVenueId = vid; } }
     if (bestVenueId) {
+      // Remove from old venue's eventIds if present
+      if (ev.venueId && venuesById.has(ev.venueId)) {
+        const oldV = venuesById.get(ev.venueId);
+        oldV.eventIds = oldV.eventIds.filter(id => id !== ev.id);
+      }
       ev.venueId = bestVenueId;
       venuesById.get(bestVenueId)?.eventIds.push(ev.id);
       reassigned++;
     }
   }
-  if (reassigned > 0) console.log(`Reassigned ${reassigned} events with no address to their organizer's primary venue.`);
+  if (reassigned > 0) console.log(`Reassigned ${reassigned} events with missing address/coordinates to their organizer's primary venue.`);
 
   // Build filters
   const distinct = (arr) => [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
