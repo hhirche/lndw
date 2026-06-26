@@ -18,6 +18,13 @@ function formatTime(min) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+function formatTimeSafe(minVal, strVal) {
+  if (minVal != null) return formatTime(minVal);
+  // Fallback: use string field if numeric minutes are missing
+  if (strVal) return strVal.replace(/\s*Uhr\s*$/i, '').trim();
+  return '';
+}
+
 const LINK_ICONS = {
   website: '🔗', twitter: '𝕏', youtube: '▶', facebook: 'f', instagram: '📷',
 };
@@ -50,11 +57,11 @@ export function showEvent(eventId) {
   const timeBlocks = `
     <div class="card-time-block">
       <span class="card-time-label">Beginn</span>
-      <span class="card-time-value">${escapeHtml(ev.begin || '')} Uhr</span>
+      <span class="card-time-value">${formatTimeSafe(ev.beginMin, ev.begin)} Uhr</span>
     </div>
     <div class="card-time-block">
       <span class="card-time-label">Ende</span>
-      <span class="card-time-value">${escapeHtml(ev.end || '')} Uhr</span>
+      <span class="card-time-value">${formatTimeSafe(ev.endMin, ev.end)} Uhr</span>
     </div>
     ${ev.duration ? `<span class="card-time-duration">${escapeHtml(ev.duration)}</span>` : ''}
   `;
