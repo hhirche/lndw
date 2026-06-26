@@ -74,6 +74,7 @@ function main() {
       title: ev.title,
       teaser: ev.teaser,
       description: ev.description,
+      beschreibung: ev.beschreibung,
       begin: ev.begin,
       end: ev.end,
       beginMin: timeToMinutes(ev.begin),

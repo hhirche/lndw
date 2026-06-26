@@ -685,6 +685,21 @@ html, body {
   margin-bottom: 20px;
   white-space: pre-line;
 }
+.card-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pink);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.card-beschreibung {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  margin-bottom: 20px;
+  white-space: pre-line;
+}
 .card-interests { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
 .card-interest {
   padding: 4px 10px;

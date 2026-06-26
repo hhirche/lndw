@@ -95,6 +95,7 @@ export function showEvent(eventId) {
       ${venueBlock}
       <div class="card-organizer">Veranstalter: <strong>${escapeHtml(ev.organizer)}</strong></div>
       ${ev.description ? `<div class="card-description">${escapeHtml(ev.description)}</div>` : ''}
+      ${ev.beschreibung ? `<div class="card-beschreibung"><h3 class="card-section-title">Beschreibung</h3>${escapeHtml(ev.beschreibung)}</div>` : ''}
       ${interestsHtml}
       ${linksHtml}
       <a class="card-detail-link" href="${escapeHtml(ev.detailUrl)}" target="_blank" rel="noopener noreferrer">

@@ -55,6 +55,12 @@ function parseDetailPage(html, detailUrl) {
     description = dec(subMatch[1].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim());
   }
 
+  let beschreibung = '';
+  const descMatch = html.match(/<div\s+class="description\s+mb-3\s+mb-lg-5">\s*<h2>\s*Beschreibung\s*<\/h2>\s*([\s\S]*?)<\/div>/);
+  if (descMatch) {
+    beschreibung = dec(descMatch[1].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim());
+  }
+
   let formatBadge = '';
   const badgeMatch = html.match(/<span\s+class="badge\s+bg-pink[^"]*">([^<]*)<\/span>/);
   if (badgeMatch) formatBadge = dec(badgeMatch[1].trim());
@@ -101,7 +107,7 @@ function parseDetailPage(html, detailUrl) {
     imageUrl = imgMatch[1].startsWith('http') ? imgMatch[1] : BASE + imgMatch[1];
   }
 
-  return { detailUrl, title, description, formatInfo: '', organizer, addressBlock,
+  return { detailUrl, title, description, beschreibung, formatInfo: '', organizer, addressBlock,
     duration, links, begin, end, formatBadge, imageUrl };
 }
 

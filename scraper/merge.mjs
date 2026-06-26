@@ -113,6 +113,7 @@ function main() {
       title: d.title || c.title,
       teaser: c.teaser,
       description: d.description || '',
+      beschreibung: d.beschreibung || '',
       formatInfo: d.formatInfo || '',
       begin: d.begin || c.begin,
       end: d.end || c.end,
